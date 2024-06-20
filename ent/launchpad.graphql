@@ -1,0 +1,4 @@
+type MinterContract {
+  address: String!
+  abi: String!
+}

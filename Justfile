@@ -1,7 +1,7 @@
 default:
     just --list
 
-db_url := "postgres://carbonable:carbonable@localhost:5432/carbonable_leaderboard?sslmode=disable"
+db_url := "postgres://carbonable:carbonable@localhost:5432/carbonable_launchpad?sslmode=disable"
 
 # start docker database
 start_db:
@@ -30,4 +30,4 @@ migrate_diff migration_name:
 migrate:
   atlas migrate apply \
     --dir "file://ent/migrate/migrations" \
-    --url "postgres://carbonable:carbonable@localhost:5432/carbonable_portfolio?search_path=public&sslmode=disable"
+    --url "postgres://carbonable:carbonable@localhost:5432/carbonable_launchpad?search_path=public&sslmode=disable"

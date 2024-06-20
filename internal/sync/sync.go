@@ -3,9 +3,11 @@ package sync
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 
 	"entgo.io/ent/dialect/sql"
@@ -67,7 +69,6 @@ func syncProject(ctx context.Context, db *ent.Client, rpc rpc.RpcProvider, c sdk
 		return nil, err
 	}
 	tv := getTotalValue(ctx, rpc, c, &slot)
-	jsonTv, err := tv.MarshalJSON()
 	if err != nil {
 		slog.Error("faield to marshal total value", err)
 		return nil, err
@@ -91,7 +92,7 @@ func syncProject(ctx context.Context, db *ent.Client, rpc rpc.RpcProvider, c sdk
 		SetSlug(slotUri.Slug()).
 		SetValueDecimal(int(vd)).
 		SetForecastedApr("").
-		SetTotalValue(string(jsonTv)).
+		SetTotalValue(tv.String()).
 		SetPaymentToken(paymentToken).
 		SetMetadata(metadata).
 		OnConflict(sql.ConflictColumns("address", "slot")).
@@ -180,8 +181,7 @@ func syncLaunchpad(ctx context.Context, wg *sync.WaitGroup, db *ent.Client, rpc 
 	}
 	isCanceled, err := toBool(callContract, ctx, rpc, minterAddr, "is_canceled")
 	if err != nil {
-		slog.Error("faield to get is_canceled", err)
-		return
+		isCanceled = false
 	}
 
 	err = db.Launchpad.Create().
@@ -298,8 +298,16 @@ func getPaymentToken(ctx context.Context, r rpc.RpcProvider, c string) (schema.P
 	if err != nil {
 		return schema.PaymentToken{}, err
 	}
+	s, err := hex.DecodeString(strings.Replace(symbol[0].String(), "0x", "", 1))
+	if err != nil {
+		return schema.PaymentToken{
+			Symbol:  symbol[0].String(),
+			Address: paymentTokenAddress[0].String(),
+		}, err
+	}
+
 	return schema.PaymentToken{
-		Symbol:  symbol[0].String(),
+		Symbol:  string(s),
 		Address: paymentTokenAddress[0].String(),
 	}, nil
 }

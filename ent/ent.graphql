@@ -1,0 +1,103 @@
+directive @goField(forceResolver: Boolean, name: String, omittable: Boolean) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @goModel(model: String, models: [String!], forceGenerate: Boolean) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+"""
+Define a Relay Cursor type:
+https://relay.dev/graphql/connections.htm#sec-Cursor
+"""
+scalar Cursor
+type Launchpad implements Node {
+  id: ID!
+  is_ready: Boolean!
+  minter_contract: MinterContract!
+  whitelisted_sale_open: Boolean!
+  public_sale_open: Boolean!
+  is_sold_out: Boolean!
+  is_canceled: Boolean!
+  project: Project!
+}
+type Mint implements Node {
+  id: ID!
+  min_value_per_tx: String!
+  max_value_per_tx: String!
+  minter_address: String!
+  project: Project!
+}
+"""
+An object with an ID.
+Follows the [Relay Global Object Identification Specification](https://relay.dev/graphql/objectidentification.htm)
+"""
+interface Node @goModel(model: "github.com/carbonable/carbonable-launchpad-backend/ent.Noder") {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+"""
+Possible directions in which to order a list of items when provided an `orderBy` argument.
+"""
+enum OrderDirection {
+  """
+  Specifies an ascending order for a given `orderBy` argument.
+  """
+  ASC
+  """
+  Specifies a descending order for a given `orderBy` argument.
+  """
+  DESC
+}
+"""
+Information about pagination in a connection.
+https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  has_next_page: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  has_previous_page: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  start_cursor: Cursor
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  end_cursor: Cursor
+}
+type Project implements Node {
+  id: ID!
+  address: String!
+  slot: Int!
+  name: String!
+  slug: String!
+  value_decimal: Int!
+  forecasted_apr: String
+  total_value: String!
+  payment_token: PaymentToken!
+  metadata: Metadata!
+  mint: Mint
+  launchpad: Launchpad
+}
+type Query {
+  """
+  Fetches an object given its ID.
+  """
+  node(
+    """
+    ID of the object.
+    """
+    id: ID!
+  ): Node
+  """
+  Lookup nodes by a list of IDs.
+  """
+  nodes(
+    """
+    The list of node IDs.
+    """
+    ids: [ID!]!
+  ): [Node]!
+}

@@ -1,0 +1,31 @@
+type PaymentToken {
+  symbol: String!
+  address: String!
+}
+type Milestone {
+  id: ID!
+  boost: String!
+  ha: String!
+  ton: String!
+  ceil: Int!
+}
+type Metadata {
+  rating: String!
+  ton_price: String!
+  milestones: [Milestone!]!
+}
+
+"""Aggregated project data."""
+type ProjectDetails {
+  project: Project!
+  mint: Mint!
+  launchpad: Launchpad!
+}
+
+extend type Query {
+   """Returns the list of projects available in launchpad."""
+   list: [ProjectDetails]!
+   """Get project launchpad details filtered by slug."""
+   details(slug: String!): ProjectDetails!
+}
+

@@ -24,6 +24,8 @@ type LaunchpadQuery struct {
 	predicates  []predicate.Launchpad
 	withProject *ProjectQuery
 	withFKs     bool
+	modifiers   []func(*sql.Selector)
+	loadTotal   []func(context.Context, []*Launchpad) error
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -390,6 +392,9 @@ func (lq *LaunchpadQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*La
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(lq.modifiers) > 0 {
+		_spec.Modifiers = lq.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -402,6 +407,11 @@ func (lq *LaunchpadQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*La
 	if query := lq.withProject; query != nil {
 		if err := lq.loadProject(ctx, query, nodes, nil,
 			func(n *Launchpad, e *Project) { n.Edges.Project = e }); err != nil {
+			return nil, err
+		}
+	}
+	for i := range lq.loadTotal {
+		if err := lq.loadTotal[i](ctx, nodes); err != nil {
 			return nil, err
 		}
 	}
@@ -443,6 +453,9 @@ func (lq *LaunchpadQuery) loadProject(ctx context.Context, query *ProjectQuery, 
 
 func (lq *LaunchpadQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := lq.querySpec()
+	if len(lq.modifiers) > 0 {
+		_spec.Modifiers = lq.modifiers
+	}
 	_spec.Node.Columns = lq.ctx.Fields
 	if len(lq.ctx.Fields) > 0 {
 		_spec.Unique = lq.ctx.Unique != nil && *lq.ctx.Unique

@@ -31,6 +31,8 @@ type Client struct {
 	Mint *MintClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
+	// additional fields for node api
+	tables tables
 }
 
 // NewClient creates a new client configured with the given options.
